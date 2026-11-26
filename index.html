@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Circus Launch</title>
+<style>
+*{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#17152d;color:white;font-family:system-ui,sans-serif;touch-action:manipulation}
+#wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px}
+h1{font-size:clamp(22px,5vw,34px);margin:4px;color:#ffd36b}
+#game{width:min(96vw,760px);height:auto;max-height:65vh;border:3px solid #f6c65b;border-radius:14px;background:#25204b;display:block;touch-action:none}
+#panel{width:min(96vw,760px);display:flex;gap:10px;margin-top:10px}
+button{flex:1;border:0;border-radius:12px;padding:16px 8px;font-size:17px;font-weight:800;background:#f6c65b;color:#241b35;touch-action:manipulation}
+button:active{transform:scale(.98);background:#fff0b8}
+#hint{font-size:14px;text-align:center;opacity:.9;margin:8px}
+</style>
+</head>
+<body>
+<div id="wrap">
+<h1>🎪 CIRCUS LAUNCH</h1>
+<canvas id="game" width="720" height="460"></canvas>
+<div id="panel">
+<button id="start">STARTA</button>
+<button id="flip">VOLTA!</button>
+<button id="reset">BÖRJA OM</button>
+</div>
+<div id="hint">Tryck STARTA. Tryck sedan VOLTA! i luften och landa på mattan.</div>
+</div>
+<script>
+(()=>{
+const c=document.getElementById('game'),ctx=c.getContext('2d');
+const startBtn=document.getElementById('start'),flipBtn=document.getElementById('flip'),resetBtn=document.getElementById('reset');
+let state='ready',x=170,y=300,vy=0,angle=0,flips=0,score=0,frame=0,flipPulse=0;
+function reset(){state='ready';x=170;y=300;vy=0;angle=0;flips=0;frame=0;flipPulse=0;draw()}
+function launch(){if(state==='ready'||state==='landed'||state==='miss'){reset();state='air';vy=-10.8;frame=0}}
+function flip(){if(state==='air'){angle+=Math.PI*2;flips++;flipPulse=12}}
+startBtn.addEventListener('click',launch); startBtn.addEventListener('pointerup',e=>{e.preventDefault();launch()});
+flipBtn.addEventListener('click',flip); flipBtn.addEventListener('pointerup',e=>{e.preventDefault();flip()});
+resetBtn.addEventListener('click',reset); resetBtn.addEventListener('pointerup',e=>{e.preventDefault();reset()});
+function draw(){
+ctx.clearRect(0,0,720,460);
+let g=ctx.createLinearGradient(0,0,0,460);g.addColorStop(0,'#30265d');g.addColorStop(1,'#17152d');ctx.fillStyle=g;ctx.fillRect(0,0,720,460);
+ctx.fillStyle='#ffcf65';for(let i=0;i<9;i++){ctx.beginPath();ctx.arc(40+i*80,45,4,0,7);ctx.fill()}
+ctx.fillStyle='#f35d75';ctx.fillRect(0,350,720,110);
+ctx.fillStyle='#ffe5a3';ctx.fillRect(500,322,160,28);ctx.fillStyle='#fff';ctx.font='bold 18px system-ui';ctx.fillText('LANDNINGSMATTA',500,310);
+ctx.fillStyle='#d7a34b';ctx.fillRect(70,325,150,12);ctx.fillStyle='#f6c65b';ctx.fillRect(70,315,150,10);
+ctx.fillStyle='#fff';ctx.font='20px system-ui';ctx.fillText('Poäng: '+score,24,35);ctx.fillText('Volter: '+flips,24,65);
+ctx.save();ctx.translate(x,y);ctx.rotate(angle);
+ctx.strokeStyle='#fff';ctx.lineWidth=10;ctx.lineCap='round';
+ctx.beginPath();ctx.moveTo(0,-25);ctx.lineTo(0,20);ctx.stroke();
+ctx.strokeStyle='#f6c65b';ctx.lineWidth=8;ctx.beginPath();ctx.moveTo(0,-12);ctx.lineTo(-22,5);ctx.moveTo(0,-12);ctx.lineTo(22,5);ctx.moveTo(0,20);ctx.lineTo(-16,40);ctx.moveTo(0,20);ctx.lineTo(16,40);ctx.stroke();
+ctx.fillStyle='#ffd2ad';ctx.beginPath();ctx.arc(0,-40,14,0,7);ctx.fill();
+ctx.fillStyle='#e84d70';ctx.fillRect(-9,-54,18,7);ctx.restore();
+if(state==='ready'){ctx.fillStyle='white';ctx.font='bold 28px system-ui';ctx.textAlign='center';ctx.fillText('Redo för avstamp?',360,180);ctx.font='18px system-ui';ctx.fillText('Tryck STARTA nedan',360,215);ctx.textAlign='left'}
+if(state==='landed'||state==='miss'){ctx.fillStyle='white';ctx.textAlign='center';ctx.font='bold 30px system-ui';ctx.fillText(state==='landed'?'SNYGG LANDNING!':'MISS!',360,175);ctx.font='20px system-ui';ctx.fillText('Tryck STARTA för en ny runda',360,210);ctx.textAlign='left'}
+}
+function tick(){
+if(state==='air'){
+vy+=.28;y+=vy;x+=3.2;angle+=.045;frame++;
+if(flipPulse>0)flipPulse--;
+if(y>=300&&x>460){y=300;state='landed';score+=Math.max(100,flips*250+500)}
+else if(y>350||x>700){state='miss'}
+draw();
+}
+requestAnimationFrame(tick)
+}
+draw();tick();
+})();
+</script>
+</body></html>
